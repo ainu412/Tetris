@@ -8,12 +8,13 @@ using namespace std;
 
 #define BLOCK_CNT	 5//方块组合种类数
 #define FORM_CNT	 4//一种方块形态数
-#define BLOCK_ROW	 5
+#define BLOCK_ROW	 5//方块四周全为0??
 #define BLOCK_COLUMN 5
 #define UNIT_SIZE	 25//单元小方块边长,大黑格子边长
-#define UNIT_SMALL	 24.9//小彩格子边长和清除它的小黑格子边长
+#define UNIT_SMALL	 24.99999//小彩格子边长和清除它的小黑格子边长
 //全局量首字母大写,初始化值为无意义数
 int Color[BLOCK_CNT]={GREEN,CYAN,MAGENTA,BROWN,YELLOW};//在easyX帮助手册中颜色的值为6位十六进制数,故数组类型为int足够(int有4个字节32位二进制,8位十六进制)
+int Index = -1;
 int NxtIndex = -1;//因正常在0-(BLOCK_CNT-1),初始化为不正常值,若出现-1可知初始化后为赋值,快速检索错误点
 
 //初始化方块:1表示填充,0表示未填充-因底色为黑色,即填充黑色方块"■",即clrBlock
@@ -197,13 +198,13 @@ void gameScene(){
 	outtextxy(390, 600, "空格: 暂停");
 }
 
-void drawBlock(){
-	setcolor(Color[NxtIndex]);
+void drawBlock(int x, int y, int index){//有坐标参数则可多次调用,灵活在所需位置画图
+	setcolor(Color[index]);
 	setfont(UNIT_SMALL, 0, "楷体");//楷体中加载实心方块,明显紧凑
 	for (int r=0; r<BLOCK_ROW; r++){
 		for (int c=0; c<BLOCK_COLUMN; c++){
 			if (block[NxtIndex * FORM_CNT][r][c] == 1)
-				outtextxy(381 + c*UNIT_SIZE, 71 + r*UNIT_SIZE,"■");
+				outtextxy(x + c*UNIT_SIZE, 71 + r*UNIT_SIZE,"■");
 		}
 	}
 }
@@ -220,20 +221,38 @@ void clrBlock(){
 	}
 }
 
-void nxtblock(){
+void nxtBlock(){//屏幕右上角(381,71)处显示下一个方块图像
 	clrBlock();
 
 	//生成随机数,以此随机数生成新方块
 	srand(time(NULL));//以时间作为随机种子,因不同时间调用函数
 	NxtIndex = rand() % BLOCK_CNT;//使生成数字:0-(BLOCK_CNT-1)
 
-	drawBlock();//在新方块产生后有其他操作,故画新方块为函数中的最后一步	
+	drawBlock(381, 71, NxtIndex);//在新方块产生后有其他操作,故画新方块为函数中的最后一步
+	Index = NxtIndex;
+}
+int visit[30][15] = {0};//只有在定义时可以这样初始化为0,在之后对数组初始化memset(void _Dst, int _Val = 0, size_t_Size)即可
+
+void land(){//方块降落
+
+}
+void newBlock(){
+	drawBlock(130, 30, Index);//起始降落点
+	Sleep(1000);
+	nxtBlock();
+
+	land();
 }
 
 int main(){
 	welcome();
 	gameScene();
-	nxtblock();
+	nxtBlock();//屏幕右上角显示下一个方块图像
+	Sleep(500);//给用户的缓冲时间
+	while(1){
+		newBlock();
+		Sleep(100);//0.1s产生一个新方块
+	}
 
 	system("pause");
 	closegraph();//记得关闭图像
